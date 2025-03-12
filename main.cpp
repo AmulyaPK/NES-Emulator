@@ -106,7 +106,7 @@ private:
 	}
 
 	static Demo_olc2C02* pInstance;
-	Demo_olc2C02* Demo_olc2C02::pInstance = nullptr;
+	
 
 	static float SoundOut (int nChannel, float fGlobalTime, float fTimeStep) {
 		// Every time a system audio sample is requested we'll perform enough emulation clocks to
@@ -119,8 +119,8 @@ private:
 			while (!pInstance->nes.clock()) {};
 			return static_cast<float>(pInstance->nes.dAudioSample);
 		}
-		// else 
-		// 	return 0.0f;
+		else 
+			return 0.0f;
 	}
 
 	bool OnUserCreate() override
@@ -169,7 +169,7 @@ private:
 		nes.controller[0] |= GetKey(olc::Key::LEFT).bHeld ? 0x02 : 0x00;
 		nes.controller[0] |= GetKey(olc::Key::RIGHT).bHeld ? 0x01 : 0x00;
 
-		if (GetKey(olc::Key::SPACE).bPressed) bEmulationRun = !bEmulationRun;
+		// if (GetKey(olc::Key::SPACE).bPressed) bEmulationRun = !bEmulationRun;
 		if (GetKey(olc::Key::R).bPressed) nes.reset();
 		if (GetKey(olc::Key::P).bPressed) (++nSelectedPalette) &= 0x07;
 
@@ -298,9 +298,7 @@ private:
 	}
 };
 
-
-
-
+Demo_olc2C02* Demo_olc2C02::pInstance = nullptr;
 
 int main()
 {
