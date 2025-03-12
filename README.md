@@ -16,7 +16,7 @@ Ensure that you have the following installed on your system:
 
 1. **Place all source files in a single folder**
 
-   `main.cpp`, `Bus.cpp`, `Bus.h`, `olc2C02.cpp`, `olc2C02.h`, `olc2A03.cpp`, `olc2A03.h`, `Mapper.cpp`, `Mapper.h`,  `Mapper_000.cpp`, `Mapper_000.h`, `Cartridge.cpp`, `Cartridge.h`, `olc6502.cpp`, `olc6502.h`
+   `main.cpp`, `Bus.cpp`, `Bus.h`, `olc2C02.cpp`, `olc2C02.h`, `olc2A03.cpp`, `olc2A03.h`, `Mapper.cpp`, `Mapper.h`,  `Mapper_000.cpp`, `Mapper_000.h`, `Cartridge.cpp`, `Cartridge.h`, `olc6502.cpp`, `olc6502.h`, `olcPixelGameEngine.h`, `olcPGEX_Sound.h`
 
 3. **Modify the `.nes` file being loaded**
 
