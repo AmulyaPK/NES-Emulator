@@ -15,10 +15,12 @@ Ensure that you have the following installed on your system:
 ### Steps to Compile and Run
 
 1. **Place all source files in a single folder**
-   - `main.cpp`, `Bus.cpp`, `olc2C02.cpp`, `olc2A03.cpp`, `Mapper.cpp`, `Mapper_000.cpp`, `Cartridge.cpp`, `olc6502.cpp`
 
-2. **Modify the `.nes` file being loaded**
-   - Open `main.cpp` and update the filename of the `.nes` ROM being loaded in the `OnUserCreate()` function:
+   `main.cpp`, `Bus.cpp`, `Bus.h`, `olc2C02.cpp`, `olc2C02.h`, `olc2A03.cpp`, `olc2A03.h`, `Mapper.cpp`, `Mapper.h`,  `Mapper_000.cpp`, `Mapper_000.h`, `Cartridge.cpp`, `Cartridge.h`, `olc6502.cpp`, `olc6502.h`
+
+3. **Modify the `.nes` file being loaded**
+
+   Open `main.cpp` and update the filename of the `.nes` ROM being loaded in the `OnUserCreate()` function:
      ```cpp
      bool OnUserCreate() override
      {
@@ -27,14 +29,14 @@ Ensure that you have the following installed on your system:
          ...
      }
      ```
-     - Replace `"./Super_mario_brothers.nes"` with the desired `.nes` file.
+   Replace `"./Super_mario_brothers.nes"` with the desired `.nes` file.
 
-3. **Open a terminal and navigate to the project folder.**
+4. **Open a terminal and navigate to the project folder.**
 
-4. **Compile and link the project:**
+5. **Compile and link the project:**
    ```sh
    g++ main.cpp Bus.cpp olc2C02.cpp olc2A03.cpp Mapper.cpp Mapper_000.cpp Cartridge.cpp olc6502.cpp -o test -lopengl32 -lglu32 -lgdi32 -luser32 -lgdiplus -lshlwapi -ldwmapi -lwinmm
-5. **Once the compilation is successful, run the program using:**
+6. **Once the compilation is successful, run the program using:**
    ```sh
    .\test
 
