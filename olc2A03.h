@@ -38,7 +38,6 @@ class olc2A03 {
                         output = sequence & 0x00000001;
                     }
                 }
-
                 return output;
             }
         };
@@ -151,7 +150,8 @@ class olc2A03 {
                     }
                 }
 
-                if (enabled) {
+                // if (enabled) 
+                {
                     if (timer == 0 || reload) {
                         timer = period;
                         reload = false;
@@ -189,6 +189,17 @@ class olc2A03 {
         sweeper pulse1_sweep;
 
         double dGlobalTime = 0.0;
+
+        // Square Wave Pulse Channel 2
+        bool pulse2_enable = false;
+        bool pulse2_halt = false;
+        double pulse2_sample = 0.0;
+        double pulse2_output = 0.0;
+        sequencer pulse2_seq;
+        oscpulse pulse2_osc;
+        envelope pulse2_env;
+        lengthcounter pulse2_lc;
+        sweeper pulse2_sweep;
 
         bool noise_enable = false;
         bool noise_halt = false;
