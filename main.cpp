@@ -126,7 +126,7 @@ private:
 	bool OnUserCreate() override
 	{
 		// Load the cartridge
-		cart = std::make_shared<Cartridge>("./01_Hello-master/BUILD/hello.nes");
+		cart = std::make_shared<Cartridge>("./ROMs/Super_mario_brothers.nes");
 		
 		if (!cart->ImageValid())
 			return false;

@@ -29,7 +29,7 @@ Ensure that you have the following installed on your system:
          ...
      }
      ```
-   Replace `"./Super_mario_brothers.nes"` with the desired `.nes` file.
+   Replace `"./ROMs/Super_mario_brothers.nes"` with the desired `.nes` file.
 
 4. **Open a terminal and navigate to the project folder.**
 
