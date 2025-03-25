@@ -25,11 +25,11 @@ Ensure that you have the following installed on your system:
      bool OnUserCreate() override
      {
          // Load the cartridge
-         cart = std::make_shared<Cartridge>("./Super_mario_brothers.nes");
+         cart = std::make_shared<Cartridge>("./ROMs/Super_mario_brothers.nes");
          ...
      }
      ```
-   Replace `"./ROMs/Super_mario_brothers.nes"` with the desired `.nes` file.
+   Replace `"Super_mario_brothers.nes"` with the desired `.nes` file.
 
 4. **Open a terminal and navigate to the project folder.**
 
