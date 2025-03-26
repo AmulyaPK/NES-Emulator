@@ -285,4 +285,4 @@ sounds_data:
 
 .segment "CHARS"
 
-	.incbin "fruitCatcher.chr"
+	.incbin "patternMemory.chr"
