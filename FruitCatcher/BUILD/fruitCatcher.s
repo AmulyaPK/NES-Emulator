@@ -18,29 +18,36 @@
 	.import		_ppu_on_all
 	.import		_oam_clear
 	.import		_oam_meta_spr
-	.export		_grapes
-	.export		_bomb
-	.export		_watermelon
-	.export		_apple
-	.export		_banana
-	.export		_orange
-	.export		_basket
+	.import		_pad_poll
+	.import		_bank_bg
+	.import		_vram_adr
+	.import		_vram_unrle
+	.export		_grapesMS
+	.export		_bombMS
+	.export		_watermelonMS
+	.export		_appleMS
+	.export		_bananaMS
+	.export		_orangeMS
+	.export		_basketMS
+	.export		_tempBg
 	.export		_paletteSpr
 	.export		_paletteBG
-	.export		_yPos
-	.export		_xPos2
+	.export		_basket
+	.export		_controller
+	.export		_moveBasket
 	.export		_main
 
 .segment	"DATA"
 
-_yPos:
-	.byte	$40
-_xPos2:
-	.byte	$10
+_basket:
+	.byte	$80
+	.byte	$A0
+	.byte	$1F
+	.byte	$1F
 
 .segment	"RODATA"
 
-_grapes:
+_grapesMS:
 	.byte	$E9
 	.byte	$EA
 	.byte	$00
@@ -58,7 +65,7 @@ _grapes:
 	.byte	$11
 	.byte	$01
 	.byte	$80
-_bomb:
+_bombMS:
 	.byte	$DF
 	.byte	$F5
 	.byte	$02
@@ -76,7 +83,7 @@ _bomb:
 	.byte	$13
 	.byte	$01
 	.byte	$80
-_watermelon:
+_watermelonMS:
 	.byte	$EA
 	.byte	$F1
 	.byte	$04
@@ -94,7 +101,7 @@ _watermelon:
 	.byte	$15
 	.byte	$00
 	.byte	$80
-_apple:
+_appleMS:
 	.byte	$E2
 	.byte	$E7
 	.byte	$06
@@ -112,7 +119,7 @@ _apple:
 	.byte	$17
 	.byte	$00
 	.byte	$80
-_banana:
+_bananaMS:
 	.byte	$E7
 	.byte	$ED
 	.byte	$20
@@ -130,7 +137,7 @@ _banana:
 	.byte	$31
 	.byte	$02
 	.byte	$80
-_orange:
+_orangeMS:
 	.byte	$F3
 	.byte	$EE
 	.byte	$22
@@ -148,7 +155,7 @@ _orange:
 	.byte	$33
 	.byte	$03
 	.byte	$80
-_basket:
+_basketMS:
 	.byte	$E0
 	.byte	$F0
 	.byte	$24
@@ -214,6 +221,32 @@ _basket:
 	.byte	$57
 	.byte	$02
 	.byte	$80
+_tempBg:
+	.byte	$04
+	.byte	$00
+	.byte	$04
+	.byte	$FE
+	.byte	$00
+	.byte	$04
+	.byte	$FE
+	.byte	$00
+	.byte	$04
+	.byte	$A1
+	.byte	$01
+	.byte	$04
+	.byte	$1F
+	.byte	$02
+	.byte	$04
+	.byte	$1F
+	.byte	$03
+	.byte	$04
+	.byte	$DF
+	.byte	$00
+	.byte	$04
+	.byte	$3E
+	.byte	$00
+	.byte	$04
+	.byte	$00
 _paletteSpr:
 	.byte	$3C
 	.byte	$0F
@@ -232,22 +265,72 @@ _paletteSpr:
 	.byte	$27
 	.byte	$2A
 _paletteBG:
+	.byte	$3C
+	.byte	$19
+	.byte	$2A
+	.byte	$3C
+	.byte	$3C
+	.byte	$01
+	.byte	$21
 	.byte	$31
+	.byte	$3C
+	.byte	$06
 	.byte	$16
-	.byte	$22
-	.byte	$36
-	.byte	$31
-	.byte	$0F
-	.byte	$0F
-	.byte	$0F
-	.byte	$31
-	.byte	$0F
-	.byte	$0F
-	.byte	$0F
-	.byte	$31
-	.byte	$0F
-	.byte	$0F
-	.byte	$0F
+	.byte	$26
+	.byte	$3C
+	.byte	$09
+	.byte	$19
+	.byte	$29
+
+.segment	"BSS"
+
+_controller:
+	.res	1,$00
+
+; ---------------------------------------------------------------
+; void __near__ moveBasket (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_moveBasket: near
+
+.segment	"CODE"
+
+;
+; if ((controller & PAD_LEFT) && (basket.x > 32)) {
+;
+	lda     _controller
+	and     #$02
+	beq     L000F
+	lda     _basket
+	cmp     #$21
+	bcc     L000F
+;
+; --basket.x;
+;
+	dec     _basket
+;
+; } else if ((controller & PAD_RIGHT) && (basket.x < 255)) {
+;
+	rts
+L000F:	lda     _controller
+	and     #$01
+	beq     L0011
+	lda     _basket
+	cmp     #$FF
+	bcc     L0012
+L0011:	rts
+;
+; ++basket.x;
+;
+L0012:	inc     _basket
+;
+; }
+;
+	rts
+
+.endproc
 
 ; ---------------------------------------------------------------
 ; void __near__ main (void)
@@ -276,6 +359,23 @@ _paletteBG:
 	ldx     #>(_paletteBG)
 	jsr     _pal_bg
 ;
+; bank_bg(1);
+;
+	lda     #$01
+	jsr     _bank_bg
+;
+; vram_adr(NAMETABLE_A);
+;
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
+; vram_unrle(tempBg);
+;
+	lda     #<(_tempBg)
+	ldx     #>(_tempBg)
+	jsr     _vram_unrle
+;
 ; ppu_on_all();
 ;
 	jsr     _ppu_on_all
@@ -288,39 +388,28 @@ L0002:	jsr     _ppu_wait_nmi
 ;
 	jsr     _oam_clear
 ;
-; oam_meta_spr(xPos2 + 100, yPos, watermelon);
+; controller = pad_poll(0);
+;
+	lda     #$00
+	jsr     _pad_poll
+	sta     _controller
+;
+; moveBasket();
+;
+	jsr     _moveBasket
+;
+; oam_meta_spr(basket.x, basket.y, basketMS);
 ;
 	jsr     decsp2
-	lda     _xPos2
-	clc
-	adc     #$64
+	lda     _basket
 	ldy     #$01
 	sta     (sp),y
-	lda     _yPos
+	lda     _basket+1
 	dey
 	sta     (sp),y
-	lda     #<(_watermelon)
-	ldx     #>(_watermelon)
+	lda     #<(_basketMS)
+	ldx     #>(_basketMS)
 	jsr     _oam_meta_spr
-;
-; oam_meta_spr(xPos2 + 20, yPos, basket);
-;
-	jsr     decsp2
-	lda     _xPos2
-	clc
-	adc     #$14
-	ldy     #$01
-	sta     (sp),y
-	lda     _yPos
-	dey
-	sta     (sp),y
-	lda     #<(_basket)
-	ldx     #>(_basket)
-	jsr     _oam_meta_spr
-;
-; ++yPos;
-;
-	inc     _yPos
 ;
 ; while (1) {
 ;
