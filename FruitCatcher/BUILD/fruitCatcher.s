@@ -17,12 +17,14 @@
 	.import		_ppu_off
 	.import		_ppu_on_all
 	.import		_oam_clear
+	.import		_oam_spr
 	.import		_oam_meta_spr
 	.import		_pad_poll
 	.import		_bank_bg
 	.import		_rand8
 	.import		_vram_adr
 	.import		_vram_unrle
+	.export		_backNT
 	.export		_grapesMS
 	.export		_bombMS
 	.export		_watermelonMS
@@ -30,7 +32,6 @@
 	.export		_bananaMS
 	.export		_orangeMS
 	.export		_basketMS
-	.export		_backNT
 	.export		_paletteSpr
 	.export		_paletteBG
 	.export		_basket
@@ -38,8 +39,14 @@
 	.export		_fruits
 	.export		_visible
 	.export		_fruitType
+	.export		_scoreText
+	.export		_score
+	.export		_speed
+	.export		_counter
+	.export		_i
 	.export		_moveBasket
 	.export		_checkCollision
+	.export		_convertScoreToChar
 	.export		_main
 
 .segment	"DATA"
@@ -49,183 +56,15 @@ _basket:
 	.byte	$B9
 	.byte	$1F
 	.byte	$1F
+_score:
+	.word	$0000
+_speed:
+	.byte	$1E
+_counter:
+	.byte	$00
 
 .segment	"RODATA"
 
-_grapesMS:
-	.byte	$E9
-	.byte	$EA
-	.byte	$00
-	.byte	$01
-	.byte	$F1
-	.byte	$EA
-	.byte	$01
-	.byte	$01
-	.byte	$E9
-	.byte	$F2
-	.byte	$10
-	.byte	$01
-	.byte	$F1
-	.byte	$F2
-	.byte	$11
-	.byte	$01
-	.byte	$80
-_bombMS:
-	.byte	$DF
-	.byte	$F5
-	.byte	$02
-	.byte	$01
-	.byte	$E7
-	.byte	$F5
-	.byte	$03
-	.byte	$01
-	.byte	$DF
-	.byte	$FC
-	.byte	$12
-	.byte	$01
-	.byte	$E7
-	.byte	$FC
-	.byte	$13
-	.byte	$01
-	.byte	$80
-_watermelonMS:
-	.byte	$EA
-	.byte	$F1
-	.byte	$04
-	.byte	$00
-	.byte	$F2
-	.byte	$F1
-	.byte	$05
-	.byte	$00
-	.byte	$EA
-	.byte	$F9
-	.byte	$14
-	.byte	$00
-	.byte	$F2
-	.byte	$F9
-	.byte	$15
-	.byte	$00
-	.byte	$80
-_appleMS:
-	.byte	$E2
-	.byte	$E7
-	.byte	$06
-	.byte	$00
-	.byte	$EA
-	.byte	$E7
-	.byte	$07
-	.byte	$00
-	.byte	$E2
-	.byte	$EF
-	.byte	$16
-	.byte	$00
-	.byte	$EA
-	.byte	$EF
-	.byte	$17
-	.byte	$00
-	.byte	$80
-_bananaMS:
-	.byte	$E7
-	.byte	$ED
-	.byte	$20
-	.byte	$02
-	.byte	$EF
-	.byte	$ED
-	.byte	$21
-	.byte	$02
-	.byte	$E7
-	.byte	$F5
-	.byte	$30
-	.byte	$02
-	.byte	$EF
-	.byte	$F5
-	.byte	$31
-	.byte	$02
-	.byte	$80
-_orangeMS:
-	.byte	$F3
-	.byte	$EE
-	.byte	$22
-	.byte	$03
-	.byte	$FB
-	.byte	$EE
-	.byte	$23
-	.byte	$03
-	.byte	$F3
-	.byte	$F6
-	.byte	$32
-	.byte	$03
-	.byte	$FB
-	.byte	$F6
-	.byte	$33
-	.byte	$03
-	.byte	$80
-_basketMS:
-	.byte	$E0
-	.byte	$F0
-	.byte	$24
-	.byte	$02
-	.byte	$E8
-	.byte	$F0
-	.byte	$25
-	.byte	$02
-	.byte	$F0
-	.byte	$F0
-	.byte	$26
-	.byte	$02
-	.byte	$F8
-	.byte	$F0
-	.byte	$27
-	.byte	$02
-	.byte	$E0
-	.byte	$F8
-	.byte	$34
-	.byte	$02
-	.byte	$E8
-	.byte	$F8
-	.byte	$35
-	.byte	$02
-	.byte	$F0
-	.byte	$F8
-	.byte	$36
-	.byte	$02
-	.byte	$F8
-	.byte	$F8
-	.byte	$37
-	.byte	$02
-	.byte	$E0
-	.byte	$00
-	.byte	$44
-	.byte	$02
-	.byte	$E8
-	.byte	$00
-	.byte	$45
-	.byte	$02
-	.byte	$F0
-	.byte	$00
-	.byte	$46
-	.byte	$02
-	.byte	$F8
-	.byte	$00
-	.byte	$47
-	.byte	$02
-	.byte	$E0
-	.byte	$08
-	.byte	$54
-	.byte	$02
-	.byte	$E8
-	.byte	$08
-	.byte	$55
-	.byte	$02
-	.byte	$F0
-	.byte	$08
-	.byte	$56
-	.byte	$02
-	.byte	$F8
-	.byte	$08
-	.byte	$57
-	.byte	$02
-	.byte	$80
 _backNT:
 	.byte	$71
 	.byte	$00
@@ -479,6 +318,180 @@ _backNT:
 	.byte	$00
 	.byte	$71
 	.byte	$00
+_grapesMS:
+	.byte	$E9
+	.byte	$EA
+	.byte	$00
+	.byte	$01
+	.byte	$F1
+	.byte	$EA
+	.byte	$01
+	.byte	$01
+	.byte	$E9
+	.byte	$F2
+	.byte	$10
+	.byte	$01
+	.byte	$F1
+	.byte	$F2
+	.byte	$11
+	.byte	$01
+	.byte	$80
+_bombMS:
+	.byte	$DF
+	.byte	$F5
+	.byte	$02
+	.byte	$01
+	.byte	$E7
+	.byte	$F5
+	.byte	$03
+	.byte	$01
+	.byte	$DF
+	.byte	$FC
+	.byte	$12
+	.byte	$01
+	.byte	$E7
+	.byte	$FC
+	.byte	$13
+	.byte	$01
+	.byte	$80
+_watermelonMS:
+	.byte	$EA
+	.byte	$F1
+	.byte	$04
+	.byte	$00
+	.byte	$F2
+	.byte	$F1
+	.byte	$05
+	.byte	$00
+	.byte	$EA
+	.byte	$F9
+	.byte	$14
+	.byte	$00
+	.byte	$F2
+	.byte	$F9
+	.byte	$15
+	.byte	$00
+	.byte	$80
+_appleMS:
+	.byte	$E2
+	.byte	$E7
+	.byte	$06
+	.byte	$00
+	.byte	$EA
+	.byte	$E7
+	.byte	$07
+	.byte	$00
+	.byte	$E2
+	.byte	$EF
+	.byte	$16
+	.byte	$00
+	.byte	$EA
+	.byte	$EF
+	.byte	$17
+	.byte	$00
+	.byte	$80
+_bananaMS:
+	.byte	$E7
+	.byte	$ED
+	.byte	$20
+	.byte	$02
+	.byte	$EF
+	.byte	$ED
+	.byte	$21
+	.byte	$02
+	.byte	$E7
+	.byte	$F5
+	.byte	$30
+	.byte	$02
+	.byte	$EF
+	.byte	$F5
+	.byte	$31
+	.byte	$02
+	.byte	$80
+_orangeMS:
+	.byte	$F3
+	.byte	$EE
+	.byte	$22
+	.byte	$03
+	.byte	$FB
+	.byte	$EE
+	.byte	$23
+	.byte	$03
+	.byte	$F3
+	.byte	$F6
+	.byte	$32
+	.byte	$03
+	.byte	$FB
+	.byte	$F6
+	.byte	$33
+	.byte	$03
+	.byte	$80
+_basketMS:
+	.byte	$E0
+	.byte	$F0
+	.byte	$24
+	.byte	$02
+	.byte	$E8
+	.byte	$F0
+	.byte	$25
+	.byte	$02
+	.byte	$F0
+	.byte	$F0
+	.byte	$26
+	.byte	$02
+	.byte	$F8
+	.byte	$F0
+	.byte	$27
+	.byte	$02
+	.byte	$E0
+	.byte	$F8
+	.byte	$34
+	.byte	$02
+	.byte	$E8
+	.byte	$F8
+	.byte	$35
+	.byte	$02
+	.byte	$F0
+	.byte	$F8
+	.byte	$36
+	.byte	$02
+	.byte	$F8
+	.byte	$F8
+	.byte	$37
+	.byte	$02
+	.byte	$E0
+	.byte	$00
+	.byte	$44
+	.byte	$02
+	.byte	$E8
+	.byte	$00
+	.byte	$45
+	.byte	$02
+	.byte	$F0
+	.byte	$00
+	.byte	$46
+	.byte	$02
+	.byte	$F8
+	.byte	$00
+	.byte	$47
+	.byte	$02
+	.byte	$E0
+	.byte	$08
+	.byte	$54
+	.byte	$02
+	.byte	$E8
+	.byte	$08
+	.byte	$55
+	.byte	$02
+	.byte	$F0
+	.byte	$08
+	.byte	$56
+	.byte	$02
+	.byte	$F8
+	.byte	$08
+	.byte	$57
+	.byte	$02
+	.byte	$80
 _paletteSpr:
 	.byte	$3C
 	.byte	$0F
@@ -524,6 +537,10 @@ _visible:
 	.res	15,$00
 _fruitType:
 	.res	15,$00
+_scoreText:
+	.res	5,$00
+_i:
+	.res	1,$00
 
 ; ---------------------------------------------------------------
 ; void __near__ moveBasket (void)
@@ -581,11 +598,11 @@ L0012:	inc     _basket
 .segment	"CODE"
 
 ;
-; unsigned char checkCollision(sprites fruit, sprites basket){
+; unsigned char checkCollision(sprites fruit, sprites basket) {
 ;
 	jsr     pusheax
 ;
-; if((fruit.x > basket.x - 32 && fruit.x - 16 < basket.x) && (fruit.y > basket.y - 28 && fruit.y - 16 < basket.y)){
+; if ((fruit.x > basket.x - 32 && fruit.x - 16 < basket.x) &&
 ;
 	ldy     #$04
 	lda     (sp),y
@@ -616,13 +633,16 @@ L0010:	bmi     L0012
 L0004:	ldx     #$00
 	txa
 	jmp     incsp8
+;
+; (fruit.y > basket.y - 24 && fruit.y - 16 < basket.y)) {
+;
 L0012:	ldy     #$05
 	lda     (sp),y
 	jsr     pusha0
 	ldy     #$03
 	lda     (sp),y
 	sec
-	sbc     #$1C
+	sbc     #$18
 	bcs     L0009
 	ldx     #$FF
 L0009:	jsr     tosicmp
@@ -656,6 +676,97 @@ L0013:	tya
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ convertScoreToChar (unsigned int num)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_convertScoreToChar: near
+
+.segment	"CODE"
+
+;
+; void convertScoreToChar(unsigned int num) {
+;
+	jsr     pushax
+;
+; scoreText[4] = num % 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _scoreText+4
+;
+; num /= 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosudiva0
+	jsr     stax0sp
+;
+; scoreText[3] = num % 10;
+;
+	jsr     pushax
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _scoreText+3
+;
+; num /= 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosudiva0
+	jsr     stax0sp
+;
+; scoreText[2] = num % 10;
+;
+	jsr     pushax
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _scoreText+2
+;
+; num /= 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosudiva0
+	jsr     stax0sp
+;
+; scoreText[1] = num % 10;
+;
+	jsr     pushax
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _scoreText+1
+;
+; num /= 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosudiva0
+	jsr     stax0sp
+;
+; scoreText[0] = num % 10;
+;
+	jsr     pushax
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _scoreText
+;
+; num /= 10;
+;
+	jsr     pushw0sp
+	lda     #$0A
+	jsr     tosudiva0
+	jsr     stax0sp
+;
+; }
+;
+	jmp     incsp2
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ main (void)
 ; ---------------------------------------------------------------
 
@@ -666,23 +777,8 @@ L0013:	tya
 .segment	"CODE"
 
 ;
-; unsigned char speed = 30;
-;
-	lda     #$1E
-	jsr     pusha
-;
-; unsigned char counter = 0;
-;
-	lda     #$00
-	jsr     pusha
-;
-; unsigned char score = 0;
-;
-	jsr     pusha
-;
 ; ppu_off();
 ;
-	jsr     decsp1
 	jsr     _ppu_off
 ;
 ; pal_spr((const char*)paletteSpr);
@@ -721,22 +817,21 @@ L0013:	tya
 ; for (i = 0; i < totalPoss; ++i) {
 ;
 	lda     #$00
-	tay
-L0034:	sta     (sp),y
+	sta     _i
+L003E:	lda     _i
 	cmp     #$0F
 	bcs     L0008
 ;
 ; visible[i] = 0;
 ;
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     #$00
 	sta     _visible,y
 ;
 ; fruits[i].height = 15;
 ;
 	tax
-	lda     (sp,x)
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -751,7 +846,7 @@ L0034:	sta     (sp),y
 ; fruits[i].width = 15;
 ;
 	ldx     #$00
-	lda     (sp,x)
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -765,9 +860,8 @@ L0034:	sta     (sp),y
 ;
 ; fruits[i].x = 0;
 ;
-	ldy     #$00
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -775,13 +869,14 @@ L0034:	sta     (sp),y
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	tya
+	lda     #$00
+	tay
 	sta     (ptr1),y
 ;
 ; fruits[i].y = 0;
 ;
 	tax
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -795,19 +890,13 @@ L0034:	sta     (sp),y
 ;
 ; fruitType[i] = 0;
 ;
-	dey
-	lda     (sp),y
-	tay
-	lda     #$00
+	ldy     _i
 	sta     _fruitType,y
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-	tay
-	clc
-	lda     #$01
-	adc     (sp),y
-	jmp     L0034
+	inc     _i
+	jmp     L003E
 ;
 ; ppu_wait_nmi();
 ;
@@ -842,43 +931,35 @@ L0008:	jsr     _ppu_wait_nmi
 ;
 ; ++counter;
 ;
-	ldy     #$02
-	clc
-	lda     #$01
-	adc     (sp),y
-	sta     (sp),y
+	inc     _counter
 ;
-; if(counter >= speed){
+; if (counter >= speed) {
 ;
-	iny
-	cmp     (sp),y
-	jcc     L0039
+	lda     _counter
+	cmp     _speed
+	jcc     L0041
 ;
 ; counter = 0;
 ;
 	lda     #$00
-	dey
-	sta     (sp),y
+	sta     _counter
 ;
-; for(i = 0; i < totalPoss; i++){
+; for (i = 0; i < totalPoss; i++) {
 ;
-	tay
-L0035:	sta     (sp),y
+	sta     _i
+L003F:	lda     _i
 	cmp     #$0F
-	bcs     L0039
+	bcs     L0041
 ;
-; if(visible[i] == 0){
+; if (visible[i] == 0) {
 ;
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     _visible,y
-	bne     L000E
+	bne     L0040
 ;
 ; visible[i] = 1;
 ;
-	tay
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     #$01
 	sta     _visible,y
 ;
@@ -886,9 +967,8 @@ L0035:	sta     (sp),y
 ;
 	lda     #<(_fruitType)
 	ldx     #>(_fruitType)
-	ldy     #$00
 	clc
-	adc     (sp),y
+	adc     _i
 	bcc     L0013
 	inx
 L0013:	jsr     pushax
@@ -902,7 +982,7 @@ L0013:	jsr     pushax
 ; fruits[i].x = rand8() % 235 + 20;
 ;
 	ldx     #$00
-	lda     (sp,x)
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -924,7 +1004,7 @@ L0013:	jsr     pushax
 ; fruits[i].y = 0;
 ;
 	ldx     #$00
-	lda     (sp,x)
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -938,28 +1018,25 @@ L0013:	jsr     pushax
 ;
 ; break;
 ;
-	jmp     L003A
+	jmp     L0042
 ;
-; for(i = 0; i < totalPoss; i++){
+; for (i = 0; i < totalPoss; i++) {
 ;
-L000E:	ldy     #$00
-	clc
-	lda     #$01
-	adc     (sp),y
-	jmp     L0035
+L0040:	inc     _i
+	jmp     L003F
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0039:	lda     #$00
-L003A:	tay
-L0036:	sta     (sp),y
+L0041:	lda     #$00
+L0042:	sta     _i
+L0043:	lda     _i
 	cmp     #$0F
-	bcs     L003C
+	bcs     L0046
 ;
-; if (fruits[i].y > 180 || checkCollision(fruits[i], basket)) {
+; if (fruits[i].y > 190) {
 ;
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -967,12 +1044,22 @@ L0036:	sta     (sp),y
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	iny
+	ldy     #$01
 	lda     (ptr1),y
-	cmp     #$B5
-	bcs     L003B
+	cmp     #$BF
 	ldx     #$00
-	lda     (sp,x)
+	bcc     L0044
+;
+; visible[i] = 0;
+;
+	ldy     _i
+	txa
+	sta     _visible,y
+;
+; } else if (checkCollision(fruits[i], basket)) {
+;
+	jmp     L0045
+L0044:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -991,53 +1078,57 @@ L0036:	sta     (sp),y
 	lda     _basket
 	jsr     _checkCollision
 	tax
-	beq     L0017
+	beq     L0045
 ;
 ; visible[i] = 0;
 ;
-L003B:	ldy     #$00
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     #$00
 	sta     _visible,y
 ;
+; ++score;
+;
+	inc     _score
+	bne     L001E
+	inc     _score+1
+;
+; convertScoreToChar(score);
+;
+L001E:	lda     _score
+	ldx     _score+1
+	jsr     _convertScoreToChar
+;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0017:	tay
-	clc
-	lda     #$01
-	adc     (sp),y
-	jmp     L0036
+L0045:	inc     _i
+	jmp     L0043
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L003C:	tya
-L0038:	sta     (sp),y
+L0046:	lda     #$00
+	sta     _i
+L0047:	lda     _i
 	cmp     #$0F
-	jcs     L0008
+	jcs     L004A
 ;
 ; if (visible[i] == 1) {
 ;
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	jne     L001F
+	jne     L0049
 ;
-; if(fruitType[i] == 0){
+; if (fruitType[i] == 0) {
 ;
-	ldy     #$00
-	lda     (sp),y
-	tay
+	ldy     _i
 	lda     _fruitType,y
-	bne     L0023
+	bne     L0025
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bombMS);
 ;
 	jsr     decsp2
-	ldy     #$02
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1048,9 +1139,8 @@ L0038:	sta     (sp),y
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1058,29 +1148,25 @@ L0038:	sta     (sp),y
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_bombMS)
 	ldx     #>(_bombMS)
 ;
-; }else if(fruitType[i] == 1){
+; } else if (fruitType[i] == 1) {
 ;
-	jmp     L0037
-L0023:	ldy     #$00
-	lda     (sp),y
-	tay
+	jmp     L003D
+L0025:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$01
-	bne     L0026
+	bne     L0028
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bananaMS);
 ;
 	jsr     decsp2
-	ldy     #$02
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1091,9 +1177,8 @@ L0023:	ldy     #$00
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1101,29 +1186,25 @@ L0023:	ldy     #$00
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_bananaMS)
 	ldx     #>(_bananaMS)
 ;
-; }else if(fruitType[i] == 2){
+; } else if (fruitType[i] == 2) {
 ;
-	jmp     L0037
-L0026:	ldy     #$00
-	lda     (sp),y
-	tay
+	jmp     L003D
+L0028:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$02
-	bne     L0029
+	bne     L002B
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, appleMS);
 ;
 	jsr     decsp2
-	ldy     #$02
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1134,9 +1215,8 @@ L0026:	ldy     #$00
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1144,29 +1224,25 @@ L0026:	ldy     #$00
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_appleMS)
 	ldx     #>(_appleMS)
 ;
-; }else if(fruitType[i] == 3){
+; } else if (fruitType[i] == 3) {
 ;
-	jmp     L0037
-L0029:	ldy     #$00
-	lda     (sp),y
-	tay
+	jmp     L003D
+L002B:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$03
-	bne     L002C
+	bne     L002E
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, orangeMS);
 ;
 	jsr     decsp2
-	ldy     #$02
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1177,9 +1253,8 @@ L0029:	ldy     #$00
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1187,29 +1262,25 @@ L0029:	ldy     #$00
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_orangeMS)
 	ldx     #>(_orangeMS)
 ;
-; }else if(fruitType[i] == 4){
+; } else if (fruitType[i] == 4) {
 ;
-	jmp     L0037
-L002C:	ldy     #$00
-	lda     (sp),y
-	tay
+	jmp     L003D
+L002E:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$04
-	bne     L002F
+	bne     L0031
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, watermelonMS);
 ;
 	jsr     decsp2
-	ldy     #$02
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1220,9 +1291,8 @@ L002C:	ldy     #$00
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1230,29 +1300,25 @@ L002C:	ldy     #$00
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_watermelonMS)
 	ldx     #>(_watermelonMS)
 ;
-; }else if(fruitType[i] == 5){
+; } else if (fruitType[i] == 5) {
 ;
-	jmp     L0037
-L002F:	ldy     #$00
-	lda     (sp),y
-	tay
+	jmp     L003D
+L0031:	ldy     _i
+	ldx     #$00
 	lda     _fruitType,y
 	cmp     #$05
-	bne     L0032
+	bne     L0048
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
 ;
 	jsr     decsp2
-	ldy     #$02
-	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	sta     ptr1
 	txa
@@ -1263,9 +1329,8 @@ L002F:	ldy     #$00
 	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	iny
 	ldx     #$00
-	lda     (sp),y
+	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1273,18 +1338,17 @@ L002F:	ldy     #$00
 	txa
 	adc     #>(_fruits)
 	sta     ptr1+1
-	dey
 	lda     (ptr1),y
 	dey
 	sta     (sp),y
 	lda     #<(_grapesMS)
 	ldx     #>(_grapesMS)
-L0037:	jsr     _oam_meta_spr
+L003D:	jsr     _oam_meta_spr
 ;
 ; ++fruits[i].y;
 ;
-L0032:	ldx     #$00
-	lda     (sp,x)
+	ldx     #$00
+L0048:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1300,11 +1364,43 @@ L0032:	ldx     #$00
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L001F:	ldy     #$00
+L0049:	inc     _i
+	jmp     L0047
+;
+; for (i = 0; i < 5; ++i) {
+;
+L004A:	lda     #$00
+	sta     _i
+L004B:	lda     _i
+	cmp     #$05
+	jcs     L0008
+;
+; oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
+;
+	jsr     decsp3
+	ldx     #$00
+	lda     _i
+	jsr     mulax7
 	clc
-	lda     #$01
-	adc     (sp),y
-	jmp     L0038
+	adc     #$DC
+	ldy     #$02
+	sta     (sp),y
+	lda     #$14
+	dey
+	sta     (sp),y
+	ldy     _i
+	lda     _scoreText,y
+	clc
+	adc     #$90
+	ldy     #$00
+	sta     (sp),y
+	lda     #$02
+	jsr     _oam_spr
+;
+; for (i = 0; i < 5; ++i) {
+;
+	inc     _i
+	jmp     L004B
 
 .endproc
 
