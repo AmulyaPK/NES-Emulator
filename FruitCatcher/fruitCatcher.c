@@ -29,8 +29,8 @@ sprites fruits[totalPoss];
 unsigned char visible[totalPoss];
 unsigned char fruitType[totalPoss];
 unsigned char scoreText[5];
-unsigned int score = 0;
 unsigned char speed = 30;
+unsigned int score = 0;
 unsigned char counter = 0;
 unsigned char i;
 // Fruit Type:
@@ -111,16 +111,17 @@ void main() {
 
         // Disappear the fruits fallen/caught in basket
         for (i = 0; i < totalPoss; ++i) {
-            if (fruits[i].y > 190) {
-                visible[i] = 0;
-            } else if (checkCollision(fruits[i], basket)) {
-                visible[i] = 0;
-                ++score;
-                convertScoreToChar(score);
+            if (visible[i] == 1) {
+                if (fruits[i].y > 190) {
+                    visible[i] = 0;
+                } else if (checkCollision(fruits[i], basket)) {
+                    visible[i] = 0;
+                    ++score;
+                    convertScoreToChar(score);
+                }
             }
         }
 
-        
         // Draw the visible fruits
         for (i = 0; i < totalPoss; ++i) {
             if (visible[i] == 1) {
@@ -140,7 +141,6 @@ void main() {
                 ++fruits[i].y;
             }
         }
-        
 
         // Draw the score
         for (i = 0; i < 5; ++i) {

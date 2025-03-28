@@ -818,7 +818,7 @@ L0013:	tya
 ;
 	lda     #$00
 	sta     _i
-L003E:	lda     _i
+L0040:	lda     _i
 	cmp     #$0F
 	bcs     L0008
 ;
@@ -896,7 +896,7 @@ L003E:	lda     _i
 ; for (i = 0; i < totalPoss; ++i) {
 ;
 	inc     _i
-	jmp     L003E
+	jmp     L0040
 ;
 ; ppu_wait_nmi();
 ;
@@ -937,7 +937,7 @@ L0008:	jsr     _ppu_wait_nmi
 ;
 	lda     _counter
 	cmp     _speed
-	jcc     L0041
+	jcc     L0043
 ;
 ; counter = 0;
 ;
@@ -947,15 +947,15 @@ L0008:	jsr     _ppu_wait_nmi
 ; for (i = 0; i < totalPoss; i++) {
 ;
 	sta     _i
-L003F:	lda     _i
+L0041:	lda     _i
 	cmp     #$0F
-	bcs     L0041
+	bcs     L0043
 ;
 ; if (visible[i] == 0) {
 ;
 	ldy     _i
 	lda     _visible,y
-	bne     L0040
+	bne     L0042
 ;
 ; visible[i] = 1;
 ;
@@ -1018,20 +1018,27 @@ L0013:	jsr     pushax
 ;
 ; break;
 ;
-	jmp     L0042
+	jmp     L0044
 ;
 ; for (i = 0; i < totalPoss; i++) {
 ;
-L0040:	inc     _i
-	jmp     L003F
+L0042:	inc     _i
+	jmp     L0041
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0041:	lda     #$00
-L0042:	sta     _i
-L0043:	lda     _i
+L0043:	lda     #$00
+L0044:	sta     _i
+L0045:	lda     _i
 	cmp     #$0F
-	bcs     L0046
+	bcs     L0048
+;
+; if (visible[i] == 1) {
+;
+	ldy     _i
+	lda     _visible,y
+	cmp     #$01
+	bne     L0047
 ;
 ; if (fruits[i].y > 190) {
 ;
@@ -1048,7 +1055,7 @@ L0043:	lda     _i
 	lda     (ptr1),y
 	cmp     #$BF
 	ldx     #$00
-	bcc     L0044
+	bcc     L0046
 ;
 ; visible[i] = 0;
 ;
@@ -1058,8 +1065,8 @@ L0043:	lda     _i
 ;
 ; } else if (checkCollision(fruits[i], basket)) {
 ;
-	jmp     L0045
-L0044:	lda     _i
+	jmp     L0047
+L0046:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1078,7 +1085,7 @@ L0044:	lda     _i
 	lda     _basket
 	jsr     _checkCollision
 	tax
-	beq     L0045
+	beq     L0047
 ;
 ; visible[i] = 0;
 ;
@@ -1089,40 +1096,40 @@ L0044:	lda     _i
 ; ++score;
 ;
 	inc     _score
-	bne     L001E
+	bne     L0020
 	inc     _score+1
 ;
 ; convertScoreToChar(score);
 ;
-L001E:	lda     _score
+L0020:	lda     _score
 	ldx     _score+1
 	jsr     _convertScoreToChar
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0045:	inc     _i
-	jmp     L0043
+L0047:	inc     _i
+	jmp     L0045
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0046:	lda     #$00
+L0048:	lda     #$00
 	sta     _i
-L0047:	lda     _i
+L0049:	lda     _i
 	cmp     #$0F
-	jcs     L004A
+	jcs     L004C
 ;
 ; if (visible[i] == 1) {
 ;
 	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	jne     L0049
+	jne     L004B
 ;
 ; if (fruitType[i] == 0) {
 ;
 	ldy     _i
 	lda     _fruitType,y
-	bne     L0025
+	bne     L0027
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bombMS);
 ;
@@ -1156,11 +1163,11 @@ L0047:	lda     _i
 ;
 ; } else if (fruitType[i] == 1) {
 ;
-	jmp     L003D
-L0025:	ldy     _i
+	jmp     L003F
+L0027:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$01
-	bne     L0028
+	bne     L002A
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bananaMS);
 ;
@@ -1194,11 +1201,11 @@ L0025:	ldy     _i
 ;
 ; } else if (fruitType[i] == 2) {
 ;
-	jmp     L003D
-L0028:	ldy     _i
+	jmp     L003F
+L002A:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$02
-	bne     L002B
+	bne     L002D
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, appleMS);
 ;
@@ -1232,11 +1239,11 @@ L0028:	ldy     _i
 ;
 ; } else if (fruitType[i] == 3) {
 ;
-	jmp     L003D
-L002B:	ldy     _i
+	jmp     L003F
+L002D:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$03
-	bne     L002E
+	bne     L0030
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, orangeMS);
 ;
@@ -1270,11 +1277,11 @@ L002B:	ldy     _i
 ;
 ; } else if (fruitType[i] == 4) {
 ;
-	jmp     L003D
-L002E:	ldy     _i
+	jmp     L003F
+L0030:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$04
-	bne     L0031
+	bne     L0033
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, watermelonMS);
 ;
@@ -1308,12 +1315,12 @@ L002E:	ldy     _i
 ;
 ; } else if (fruitType[i] == 5) {
 ;
-	jmp     L003D
-L0031:	ldy     _i
+	jmp     L003F
+L0033:	ldy     _i
 	ldx     #$00
 	lda     _fruitType,y
 	cmp     #$05
-	bne     L0048
+	bne     L004A
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
 ;
@@ -1343,12 +1350,12 @@ L0031:	ldy     _i
 	sta     (sp),y
 	lda     #<(_grapesMS)
 	ldx     #>(_grapesMS)
-L003D:	jsr     _oam_meta_spr
+L003F:	jsr     _oam_meta_spr
 ;
 ; ++fruits[i].y;
 ;
 	ldx     #$00
-L0048:	lda     _i
+L004A:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1364,14 +1371,14 @@ L0048:	lda     _i
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0049:	inc     _i
-	jmp     L0047
+L004B:	inc     _i
+	jmp     L0049
 ;
 ; for (i = 0; i < 5; ++i) {
 ;
-L004A:	lda     #$00
+L004C:	lda     #$00
 	sta     _i
-L004B:	lda     _i
+L004D:	lda     _i
 	cmp     #$05
 	jcs     L0008
 ;
@@ -1400,7 +1407,7 @@ L004B:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L004B
+	jmp     L004D
 
 .endproc
 
