@@ -37,16 +37,24 @@
 	.export		_basket
 	.export		_controller
 	.export		_fruits
+	.export		_heart
 	.export		_visible
 	.export		_fruitType
+	.export		_heart_color
 	.export		_scoreText
 	.export		_score
 	.export		_speed
 	.export		_counter
 	.export		_i
+	.export		_gameState
+	.export		_playText
+	.export		_gameOverText
 	.export		_moveBasket
 	.export		_checkCollision
 	.export		_convertScoreToChar
+	.export		_drawHearts
+	.export		_updateHeart
+	.export		_initializeNewGame
 	.export		_main
 
 .segment	"DATA"
@@ -59,9 +67,28 @@ _basket:
 _score:
 	.word	$0000
 _speed:
-	.byte	$1E
+	.byte	$32
 _counter:
 	.byte	$00
+_gameState:
+	.byte	$00
+_playText:
+	.byte	$50
+	.byte	$4C
+	.byte	$41
+	.byte	$59
+	.byte	$21
+_gameOverText:
+	.byte	$47
+	.byte	$41
+	.byte	$4D
+	.byte	$45
+	.byte	$20
+	.byte	$4F
+	.byte	$56
+	.byte	$45
+	.byte	$52
+	.byte	$21
 
 .segment	"RODATA"
 
@@ -533,10 +560,14 @@ _controller:
 	.res	1,$00
 _fruits:
 	.res	60,$00
+_heart:
+	.res	20,$00
 _visible:
 	.res	15,$00
 _fruitType:
 	.res	15,$00
+_heart_color:
+	.res	5,$00
 _scoreText:
 	.res	5,$00
 _i:
@@ -767,60 +798,191 @@ L0013:	tya
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ main (void)
+; void __near__ drawHearts (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_main: near
+.proc	_drawHearts: near
 
 .segment	"CODE"
 
 ;
-; ppu_off();
-;
-	jsr     _ppu_off
-;
-; pal_spr((const char*)paletteSpr);
-;
-	lda     #<(_paletteSpr)
-	ldx     #>(_paletteSpr)
-	jsr     _pal_spr
-;
-; pal_bg((const char*)paletteBG);
-;
-	lda     #<(_paletteBG)
-	ldx     #>(_paletteBG)
-	jsr     _pal_bg
-;
-; bank_bg(1);
-;
-	lda     #$01
-	jsr     _bank_bg
-;
-; vram_adr(NAMETABLE_A);
-;
-	ldx     #$20
-	lda     #$00
-	jsr     _vram_adr
-;
-; vram_unrle(backNT);
-;
-	lda     #<(_backNT)
-	ldx     #>(_backNT)
-	jsr     _vram_unrle
-;
-; ppu_on_all();
-;
-	jsr     _ppu_on_all
-;
-; for (i = 0; i < totalPoss; ++i) {
+; for (i = 0; i < MAX_HEARTS; ++i) {
 ;
 	lda     #$00
 	sta     _i
-L0040:	lda     _i
+L000C:	lda     _i
+	cmp     #$05
+	bcs     L0003
+;
+; if (heart_color[i] == 1)
+;
+	ldy     _i
+	lda     _heart_color,y
+	cmp     #$01
+	bne     L0006
+;
+; oam_spr(210 + i * 8, 10, 8, 0);
+;
+	jsr     decsp3
+	lda     _i
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     #$D2
+	ldy     #$02
+	sta     (sp),y
+	lda     #$0A
+	dey
+	sta     (sp),y
+	lda     #$08
+;
+; else
+;
+	jmp     L000F
+;
+; oam_spr(210 + i * 8, 10, 9, 0);
+;
+L0006:	jsr     decsp3
+	lda     _i
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     #$D2
+	ldy     #$02
+	sta     (sp),y
+	lda     #$0A
+	dey
+	sta     (sp),y
+	lda     #$09
+L000F:	dey
+	sta     (sp),y
+	tya
+	jsr     _oam_spr
+;
+; for (i = 0; i < MAX_HEARTS; ++i) {
+;
+	inc     _i
+	jmp     L000C
+;
+; }
+;
+L0003:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ updateHeart (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_updateHeart: near
+
+.segment	"CODE"
+
+;
+; signed char j = MAX_HEARTS;
+;
+	lda     #$05
+	jsr     pusha
+;
+; for (j = MAX_HEARTS-1; j >= 0; --j) {
+;
+	lda     #$04
+	ldy     #$00
+	sta     (sp),y
+L000E:	lda     (sp),y
+	tax
+	bmi     L0003
+;
+; if (heart_color[j] == 1) {
+;
+	lda     (sp),y
+	tay
+	lda     _heart_color,y
+	cmp     #$01
+	bne     L0004
+;
+; heart_color[j] = 0;
+;
+	ldy     #$00
+	lda     (sp),y
+	tay
+	lda     #$00
+	sta     _heart_color,y
+;
+; break;
+;
+	jmp     incsp1
+;
+; for (j = MAX_HEARTS-1; j >= 0; --j) {
+;
+L0004:	ldy     #$00
+	lda     (sp),y
+	sec
+	sbc     #$01
+	sta     (sp),y
+	bpl     L000E
+	jmp     L000E
+;
+; }
+;
+L0003:	jmp     incsp1
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ initializeNewGame (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_initializeNewGame: near
+
+.segment	"CODE"
+
+;
+; score = 0;
+;
+	lda     #$00
+	sta     _score
+	sta     _score+1
+;
+; speed = 50;
+;
+	lda     #$32
+	sta     _speed
+;
+; for(i = 0; i < 5; ++i){
+;
+	lda     #$00
+	sta     _i
+L0012:	lda     _i
+	cmp     #$05
+	bcs     L0013
+;
+; scoreText[i] = 0;
+;
+	ldy     _i
+	lda     #$00
+	sta     _scoreText,y
+;
+; for(i = 0; i < 5; ++i){
+;
+	inc     _i
+	jmp     L0012
+;
+; for (i = 0; i < totalPoss; ++i) {
+;
+L0013:	lda     #$00
+	sta     _i
+L0014:	lda     _i
 	cmp     #$0F
-	bcs     L0008
+	bcs     L0015
 ;
 ; visible[i] = 0;
 ;
@@ -896,11 +1058,88 @@ L0040:	lda     _i
 ; for (i = 0; i < totalPoss; ++i) {
 ;
 	inc     _i
-	jmp     L0040
+	jmp     L0014
+;
+; for (i = 0; i < MAX_HEARTS; ++i) {
+;
+L0015:	lda     #$00
+	sta     _i
+L0016:	lda     _i
+	cmp     #$05
+	bcs     L000E
+;
+; heart_color[i] = 1;
+;
+	ldy     _i
+	lda     #$01
+	sta     _heart_color,y
+;
+; for (i = 0; i < MAX_HEARTS; ++i) {
+;
+	inc     _i
+	jmp     L0016
+;
+; }
+;
+L000E:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ main (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_main: near
+
+.segment	"CODE"
+
+;
+; ppu_off();
+;
+	jsr     _ppu_off
+;
+; initializeNewGame();
+;
+	jsr     _initializeNewGame
+;
+; pal_spr((const char*)paletteSpr);
+;
+	lda     #<(_paletteSpr)
+	ldx     #>(_paletteSpr)
+	jsr     _pal_spr
+;
+; pal_bg((const char*)paletteBG);
+;
+	lda     #<(_paletteBG)
+	ldx     #>(_paletteBG)
+	jsr     _pal_bg
+;
+; bank_bg(1);
+;
+	lda     #$01
+	jsr     _bank_bg
+;
+; vram_adr(NAMETABLE_A);
+;
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
+; vram_unrle(backNT);
+;
+	lda     #<(_backNT)
+	ldx     #>(_backNT)
+	jsr     _vram_unrle
+;
+; ppu_on_all();
+;
+	jsr     _ppu_on_all
 ;
 ; ppu_wait_nmi();
 ;
-L0008:	jsr     _ppu_wait_nmi
+L0002:	jsr     _ppu_wait_nmi
 ;
 ; oam_clear();
 ;
@@ -911,6 +1150,167 @@ L0008:	jsr     _ppu_wait_nmi
 	lda     #$00
 	jsr     _pad_poll
 	sta     _controller
+;
+; if(gameState == 0){
+;
+	lda     _gameState
+	bne     L005D
+;
+; oam_clear();
+;
+	jsr     _oam_clear
+;
+; for(i = 0; i<5; ++i){
+;
+	lda     #$00
+	sta     _i
+L005B:	lda     _i
+	cmp     #$05
+	bcs     L005C
+;
+; oam_spr(120 + i*8, 112, playText[i] + 96, 3);
+;
+	jsr     decsp3
+	lda     _i
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     #$78
+	ldy     #$02
+	sta     (sp),y
+	lda     #$70
+	dey
+	sta     (sp),y
+	ldy     _i
+	lda     _playText,y
+	clc
+	adc     #$60
+	ldy     #$00
+	sta     (sp),y
+	lda     #$03
+	jsr     _oam_spr
+;
+; for(i = 0; i<5; ++i){
+;
+	inc     _i
+	jmp     L005B
+;
+; if(controller & PAD_SELECT){
+;
+L005C:	lda     _controller
+	and     #$20
+	beq     L005D
+;
+; gameState = 1;
+;
+	lda     #$01
+	sta     _gameState
+;
+; if (gameState == 2) {
+;
+L005D:	lda     _gameState
+	cmp     #$02
+	jne     L0062
+;
+; oam_clear();
+;
+	jsr     _oam_clear
+;
+; for (i = 0; i < 4; ++i) {
+;
+	lda     #$00
+	sta     _i
+L005E:	lda     _i
+	cmp     #$04
+	bcs     L005F
+;
+; oam_spr(100 + i * 8, 100, gameOverText[i] + 96, 0);
+;
+	jsr     decsp3
+	lda     _i
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     #$64
+	ldy     #$02
+	sta     (sp),y
+	lda     #$64
+	dey
+	sta     (sp),y
+	ldy     _i
+	lda     _gameOverText,y
+	clc
+	adc     #$60
+	ldy     #$00
+	sta     (sp),y
+	tya
+	jsr     _oam_spr
+;
+; for (i = 0; i < 4; ++i) {
+;
+	inc     _i
+	jmp     L005E
+;
+; for(i = 4; i < 10; ++i){
+;
+L005F:	lda     #$04
+	sta     _i
+L0060:	lda     _i
+	cmp     #$0A
+	bcs     L0061
+;
+; oam_spr(100 + (i-4) * 8, 110, gameOverText[i] + 96, 0);
+;
+	jsr     decsp3
+	lda     _i
+	sec
+	sbc     #$04
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     #$64
+	ldy     #$02
+	sta     (sp),y
+	lda     #$6E
+	dey
+	sta     (sp),y
+	ldy     _i
+	lda     _gameOverText,y
+	clc
+	adc     #$60
+	ldy     #$00
+	sta     (sp),y
+	tya
+	jsr     _oam_spr
+;
+; for(i = 4; i < 10; ++i){
+;
+	inc     _i
+	jmp     L0060
+;
+; if (controller & PAD_SELECT) {
+;
+L0061:	lda     _controller
+	and     #$20
+	beq     L0062
+;
+; initializeNewGame();
+;
+	jsr     _initializeNewGame
+;
+; gameState = 1;
+;
+	lda     #$01
+	sta     _gameState
+;
+; if(gameState == 1){
+;
+L0062:	lda     _gameState
+	cmp     #$01
+	jne     L0002
 ;
 ; moveBasket();
 ;
@@ -937,7 +1337,7 @@ L0008:	jsr     _ppu_wait_nmi
 ;
 	lda     _counter
 	cmp     _speed
-	jcc     L0043
+	jcc     L0065
 ;
 ; counter = 0;
 ;
@@ -947,15 +1347,15 @@ L0008:	jsr     _ppu_wait_nmi
 ; for (i = 0; i < totalPoss; i++) {
 ;
 	sta     _i
-L0041:	lda     _i
+L0063:	lda     _i
 	cmp     #$0F
-	bcs     L0043
+	bcs     L0065
 ;
 ; if (visible[i] == 0) {
 ;
 	ldy     _i
 	lda     _visible,y
-	bne     L0042
+	bne     L0064
 ;
 ; visible[i] = 1;
 ;
@@ -963,18 +1363,18 @@ L0041:	lda     _i
 	lda     #$01
 	sta     _visible,y
 ;
-; fruitType[i] = rand8() % 6;
+; fruitType[i] = rand8() % 7;
 ;
 	lda     #<(_fruitType)
 	ldx     #>(_fruitType)
 	clc
 	adc     _i
-	bcc     L0013
+	bcc     L0028
 	inx
-L0013:	jsr     pushax
+L0028:	jsr     pushax
 	jsr     _rand8
 	jsr     pushax
-	lda     #$06
+	lda     #$07
 	jsr     tosumoda0
 	ldy     #$00
 	jsr     staspidx
@@ -1018,27 +1418,27 @@ L0013:	jsr     pushax
 ;
 ; break;
 ;
-	jmp     L0044
+	jmp     L0066
 ;
 ; for (i = 0; i < totalPoss; i++) {
 ;
-L0042:	inc     _i
-	jmp     L0041
+L0064:	inc     _i
+	jmp     L0063
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0043:	lda     #$00
-L0044:	sta     _i
-L0045:	lda     _i
+L0065:	lda     #$00
+L0066:	sta     _i
+L0067:	lda     _i
 	cmp     #$0F
-	bcs     L0048
+	jcs     L006A
 ;
-; if (visible[i] == 1) {
+; if(visible[i] == 1){
 ;
 	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	bne     L0047
+	jne     L0069
 ;
 ; if (fruits[i].y > 190) {
 ;
@@ -1055,7 +1455,7 @@ L0045:	lda     _i
 	lda     (ptr1),y
 	cmp     #$BF
 	ldx     #$00
-	bcc     L0046
+	bcc     L0068
 ;
 ; visible[i] = 0;
 ;
@@ -1063,10 +1463,17 @@ L0045:	lda     _i
 	txa
 	sta     _visible,y
 ;
+; if(fruitType[i] != 0) updateHeart();  // change color of a heart
+;
+	ldy     _i
+	lda     _fruitType,y
+	beq     L0069
+	jsr     _updateHeart
+;
 ; } else if (checkCollision(fruits[i], basket)) {
 ;
-	jmp     L0047
-L0046:	lda     _i
+	jmp     L0069
+L0068:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1085,51 +1492,65 @@ L0046:	lda     _i
 	lda     _basket
 	jsr     _checkCollision
 	tax
-	beq     L0047
+	beq     L0069
 ;
-; visible[i] = 0;
+; if (fruitType[i] == 0) {
 ;
 	ldy     _i
-	lda     #$00
-	sta     _visible,y
+	lda     _fruitType,y
+	bne     L0036
+;
+; updateHeart();
+;
+	jsr     _updateHeart
+;
+; }else{
+;
+	jmp     L0038
 ;
 ; ++score;
 ;
-	inc     _score
-	bne     L0020
+L0036:	inc     _score
+	bne     L0039
 	inc     _score+1
 ;
 ; convertScoreToChar(score);
 ;
-L0020:	lda     _score
+L0039:	lda     _score
 	ldx     _score+1
 	jsr     _convertScoreToChar
 ;
+; visible[i] = 0;
+;
+L0038:	ldy     _i
+	lda     #$00
+	sta     _visible,y
+;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0047:	inc     _i
-	jmp     L0045
+L0069:	inc     _i
+	jmp     L0067
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0048:	lda     #$00
+L006A:	lda     #$00
 	sta     _i
-L0049:	lda     _i
+L006B:	lda     _i
 	cmp     #$0F
-	jcs     L004C
+	jcs     L006E
 ;
 ; if (visible[i] == 1) {
 ;
 	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	jne     L004B
+	jne     L006D
 ;
 ; if (fruitType[i] == 0) {
 ;
 	ldy     _i
 	lda     _fruitType,y
-	bne     L0027
+	bne     L0041
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bombMS);
 ;
@@ -1163,11 +1584,11 @@ L0049:	lda     _i
 ;
 ; } else if (fruitType[i] == 1) {
 ;
-	jmp     L003F
-L0027:	ldy     _i
+	jmp     L005A
+L0041:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$01
-	bne     L002A
+	bne     L0044
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, bananaMS);
 ;
@@ -1201,11 +1622,11 @@ L0027:	ldy     _i
 ;
 ; } else if (fruitType[i] == 2) {
 ;
-	jmp     L003F
-L002A:	ldy     _i
+	jmp     L005A
+L0044:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$02
-	bne     L002D
+	bne     L0047
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, appleMS);
 ;
@@ -1239,11 +1660,11 @@ L002A:	ldy     _i
 ;
 ; } else if (fruitType[i] == 3) {
 ;
-	jmp     L003F
-L002D:	ldy     _i
+	jmp     L005A
+L0047:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$03
-	bne     L0030
+	bne     L004A
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, orangeMS);
 ;
@@ -1277,11 +1698,11 @@ L002D:	ldy     _i
 ;
 ; } else if (fruitType[i] == 4) {
 ;
-	jmp     L003F
-L0030:	ldy     _i
+	jmp     L005A
+L004A:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$04
-	bne     L0033
+	bne     L004D
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, watermelonMS);
 ;
@@ -1315,12 +1736,12 @@ L0030:	ldy     _i
 ;
 ; } else if (fruitType[i] == 5) {
 ;
-	jmp     L003F
-L0033:	ldy     _i
+	jmp     L005A
+L004D:	ldy     _i
 	ldx     #$00
 	lda     _fruitType,y
 	cmp     #$05
-	bne     L004A
+	bne     L006C
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
 ;
@@ -1350,12 +1771,12 @@ L0033:	ldy     _i
 	sta     (sp),y
 	lda     #<(_grapesMS)
 	ldx     #>(_grapesMS)
-L003F:	jsr     _oam_meta_spr
+L005A:	jsr     _oam_meta_spr
 ;
 ; ++fruits[i].y;
 ;
 	ldx     #$00
-L004A:	lda     _i
+L006C:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1371,16 +1792,26 @@ L004A:	lda     _i
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L004B:	inc     _i
-	jmp     L0049
+L006D:	inc     _i
+	jmp     L006B
+;
+; if(heart_color[0] == 0){
+;
+L006E:	lda     _heart_color
+	bne     L006F
+;
+; gameState = 2;
+;
+	lda     #$02
+	sta     _gameState
 ;
 ; for (i = 0; i < 5; ++i) {
 ;
-L004C:	lda     #$00
+L006F:	lda     #$00
 	sta     _i
-L004D:	lda     _i
+L0070:	lda     _i
 	cmp     #$05
-	jcs     L0008
+	bcs     L0054
 ;
 ; oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
 ;
@@ -1407,7 +1838,15 @@ L004D:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L004D
+	jmp     L0070
+;
+; drawHearts();
+;
+L0054:	jsr     _drawHearts
+;
+; while (1) {
+;
+	jmp     L0002
 
 .endproc
 
