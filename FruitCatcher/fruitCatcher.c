@@ -36,6 +36,7 @@ unsigned int score = 0;
 unsigned char speed = 50;
 unsigned char counter = 0;
 unsigned char i;
+unsigned char c = 2;
 unsigned char gameState = 0;  // 0 - Not Started 1 = Game Running 2 = Game Over
 unsigned char playText[5] = {'P', 'L', 'A', 'Y', '!'};
 unsigned char gameOverText[10] = {'G', 'A', 'M', 'E', ' ',
@@ -48,11 +49,11 @@ unsigned char gameOverText[10] = {'G', 'A', 'M', 'E', ' ',
 // 4 = Watermelon
 // 5 = Grapes
 
-void moveBasket() {
+void moveBasket(c) {
     if ((controller & PAD_LEFT) && (basket.x > 32)) {
-        --basket.x;
+        basket.x -= c;
     } else if ((controller & PAD_RIGHT) && (basket.x < 255)) {
-        ++basket.x;
+        basket.x += c;
     }
 }
 
@@ -98,7 +99,7 @@ void updateHeart() {
 
 void initializeNewGame() {
     score = 0;
-    speed = 50;
+    speed = 100;
 
     for (i = 0; i < 5; ++i) {
         scoreText[i] = 0;
@@ -132,6 +133,8 @@ void main() {
         ppu_wait_nmi();
         oam_clear();
         controller = pad_poll(0);
+
+        // Start screen
         if (gameState == 0) {
             oam_clear();
             for (i = 0; i < 5; ++i) {
@@ -142,6 +145,7 @@ void main() {
             }
         }
 
+        // Game ending
         if (gameState == 2) {
             oam_clear();
             for (i = 0; i < 4; ++i) {
@@ -157,7 +161,7 @@ void main() {
         }
 
         if (gameState == 1) {
-            moveBasket();
+            moveBasket(c);
             oam_meta_spr(basket.x, basket.y, basketMS);
             ++counter;
             // Create a new Fruit/Bomb
@@ -181,7 +185,7 @@ void main() {
                 if (fruits[i].y > 190) {
                     visible[i] = 0;
                     if (fruitType[i] != 0)
-                        updateHeart();  // change color of a heart
+                        updateHeart();  // Change color of a heart
                 } else if (checkCollision(fruits[i], basket)) {
                     if (fruitType[i] == 0) {
                         updateHeart();
@@ -223,8 +227,12 @@ void main() {
         for (i = 0; i < 5; ++i) {
             oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
         }
-        drawHearts();
-    }
 
-    // if (allHeartsGrey) break;
+        drawHearts();
+
+        if (score % 10 == 0 && score != 0) {
+            speed--;
+        }
+
+    }
 }
