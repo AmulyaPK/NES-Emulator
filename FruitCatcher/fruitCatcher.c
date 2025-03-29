@@ -173,56 +173,58 @@ void main() {
                     }
                 }
             }
-
-            // To make the fruits fallen/caught in basket disappear
-            for (i = 0; i < totalPoss; ++i) {
-                if (visible[i] == 1) {
-                    if (fruits[i].y > 190) {
-                        visible[i] = 0;
-                        if (fruitType[i] != 0)
-                            updateHeart();  // change color of a heart
-                    } else if (checkCollision(fruits[i], basket)) {
-                        if (fruitType[i] == 0) {
-                            updateHeart();
-                        } else {
-                            ++score;
-                            convertScoreToChar(score);
-                        }
-                        visible[i] = 0;
-                    }
-                }
-            }
-
-            if (heart_color[0] == 0) {
-                gameState = 2;
-                continue;
-            }
-
-            // Draw the visible fruits
-            for (i = 0; i < totalPoss; ++i) {
-                if (visible[i] == 1) {
-                    if (fruitType[i] == 0) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, bombMS);
-                    } else if (fruitType[i] == 1) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, bananaMS);
-                    } else if (fruitType[i] == 2) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, appleMS);
-                    } else if (fruitType[i] == 3) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, orangeMS);
-                    } else if (fruitType[i] == 4) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, watermelonMS);
-                    } else if (fruitType[i] == 5) {
-                        oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
-                    }
-                    ++fruits[i].y;
-                }
-            }
-
-            // Draw the score
-            for (i = 0; i < 5; ++i) {
-                oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
-            }
-            drawHearts();
         }
+
+        // To make the fruits fallen/caught in basket disappear
+        for (i = 0; i < totalPoss; ++i) {
+            if (visible[i] == 1) {
+                if (fruits[i].y > 190) {
+                    visible[i] = 0;
+                    if (fruitType[i] != 0)
+                        updateHeart();  // change color of a heart
+                } else if (checkCollision(fruits[i], basket)) {
+                    if (fruitType[i] == 0) {
+                        updateHeart();
+                    } else {
+                        ++score;
+                        convertScoreToChar(score);
+                    }
+                    visible[i] = 0;
+                }
+            }
+        }
+
+        if (heart_color[0] == 0) {
+            gameState = 2;
+            continue;
+        }
+
+        // Draw the visible fruits
+        for (i = 0; i < totalPoss; ++i) {
+            if (visible[i] == 1) {
+                if (fruitType[i] == 0) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, bombMS);
+                } else if (fruitType[i] == 1) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, bananaMS);
+                } else if (fruitType[i] == 2) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, appleMS);
+                } else if (fruitType[i] == 3) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, orangeMS);
+                } else if (fruitType[i] == 4) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, watermelonMS);
+                } else if (fruitType[i] == 5) {
+                    oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
+                }
+                ++fruits[i].y;
+            }
+        }
+
+        // Draw the score
+        for (i = 0; i < 5; ++i) {
+            oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
+        }
+        drawHearts();
     }
+
+    // if (allHeartsGrey) break;
 }
