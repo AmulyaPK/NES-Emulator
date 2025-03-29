@@ -6,6 +6,7 @@
 #include "metasprites.h"
 
 #define totalPoss 15
+#define MAX_HEARTS 5
 
 const unsigned char paletteSpr[16] = {0x3c, 0x0f, 0x16, 0x2a, 0x3c, 0x0f,
                                       0x13, 0x2a, 0x3c, 0x0f, 0x18, 0x28,
@@ -26,11 +27,13 @@ sprites basket = {128, 185, 31, 31};
 unsigned char controller;
 
 sprites fruits[totalPoss];
+sprites heart[MAX_HEARTS];
 unsigned char visible[totalPoss];
 unsigned char fruitType[totalPoss];
+unsigned char heart_color[MAX_HEARTS]; // to depict the color of each heart
 unsigned char scoreText[5];
-unsigned char speed = 30;
 unsigned int score = 0;
+unsigned char speed = 30;
 unsigned char counter = 0;
 unsigned char i;
 // Fruit Type:
@@ -70,6 +73,34 @@ void convertScoreToChar(unsigned int num) {
     num /= 10;
 }
 
+void drawHearts() {
+    unsigned char i;
+    for (i = 0 ; i < MAX_HEARTS ; ++i) {
+        if (heart_color[i] == 1) oam_spr(16 + i * 8, 20, 0x03, 0);
+        else oam_spr(16 + i * 8, 20, 0x04, 0);
+    }
+}
+
+void updateHeart () {
+    unsigned char i;
+    for (i = MAX_HEARTS - 1 ; i >= 0 ; --i) {
+        if (heart_color[i] == 1) {
+            heart_color[i] = 0;
+            return;
+        }
+    }
+}
+
+unsigned char allHeartsGrey() {
+    signed char i;
+    for (i = 0; i < MAX_HEARTS; i++) {
+        if (heart_color[i] == 1) {
+            return 0; // Game continues (at least one red heart exists)
+        }
+    }
+    return 1; // Game over (all hearts are grey)
+}
+
 void main() {
     ppu_off();
     pal_spr((const char*)paletteSpr);
@@ -87,6 +118,9 @@ void main() {
         fruits[i].y = 0;
         fruitType[i] = 0;
     }
+    for (i = 0 ; i < MAX_HEARTS ; ++i) {
+        heart_color[i] = 1;
+    }
 
     while (1) {
         ppu_wait_nmi();
@@ -101,7 +135,7 @@ void main() {
             for (i = 0; i < totalPoss; i++) {
                 if (visible[i] == 0) {
                     visible[i] = 1;
-                    fruitType[i] = rand8() % 6;
+                    fruitType[i] = rand8() % 7;
                     fruits[i].x = rand8() % 235 + 20;
                     fruits[i].y = 0;
                     break;
@@ -109,16 +143,18 @@ void main() {
             }
         }
 
-        // Disappear the fruits fallen/caught in basket
+        // To make the fruits fallen/caught in basket disappear
         for (i = 0; i < totalPoss; ++i) {
-            if (visible[i] == 1) {
-                if (fruits[i].y > 190) {
-                    visible[i] = 0;
-                } else if (checkCollision(fruits[i], basket)) {
-                    visible[i] = 0;
-                    ++score;
-                    convertScoreToChar(score);
+            if (fruits[i].y > 190) {
+                visible[i] = 0;
+                updateHeart(); // change color of a heart
+            } else if (checkCollision(fruits[i], basket)) {
+                if (fruitType[i] == 0) {
+                    updateHeart();
                 }
+                visible[i] = 0;
+                ++score;
+                convertScoreToChar(score);
             }
         }
 
@@ -141,10 +177,13 @@ void main() {
                 ++fruits[i].y;
             }
         }
+        
 
         // Draw the score
         for (i = 0; i < 5; ++i) {
             oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
         }
+
+        // if (allHeartsGrey) break;
     }
 }
