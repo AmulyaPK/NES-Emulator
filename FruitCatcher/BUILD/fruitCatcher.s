@@ -1169,7 +1169,7 @@ L0002:	jsr     _ppu_wait_nmi
 ; if (gameState == 0) {
 ;
 	lda     _gameState
-	bne     L006D
+	bne     L006C
 ;
 ; oam_clear();
 ;
@@ -1179,9 +1179,9 @@ L0002:	jsr     _ppu_wait_nmi
 ;
 	lda     #$00
 	sta     _i
-L006B:	lda     _i
+L006A:	lda     _i
 	cmp     #$05
-	bcs     L006C
+	bcs     L006B
 ;
 ; oam_spr(120 + i * 8, 104, playText[i] + 96, 3);
 ;
@@ -1209,13 +1209,13 @@ L006B:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L006B
+	jmp     L006A
 ;
 ; if (controller & PAD_START) {
 ;
-L006C:	lda     _controller
+L006B:	lda     _controller
 	and     #$10
-	beq     L006D
+	beq     L006C
 ;
 ; gameState = 1;
 ;
@@ -1224,9 +1224,9 @@ L006C:	lda     _controller
 ;
 ; if (gameState == 2) {
 ;
-L006D:	lda     _gameState
+L006C:	lda     _gameState
 	cmp     #$02
-	jne     L0076
+	jne     L0075
 ;
 ; oam_clear();
 ;
@@ -1236,9 +1236,9 @@ L006D:	lda     _gameState
 ;
 	lda     #$00
 	sta     _i
-L006E:	lda     _i
+L006D:	lda     _i
 	cmp     #$04
-	bcs     L006F
+	bcs     L006E
 ;
 ; oam_spr(100 + i * 8, 80, gameOverText[i] + 96, 0);
 ;
@@ -1266,15 +1266,15 @@ L006E:	lda     _i
 ; for (i = 0; i < 4; ++i) {
 ;
 	inc     _i
-	jmp     L006E
+	jmp     L006D
 ;
 ; for (i = 4; i < 9; ++i) {
 ;
-L006F:	lda     #$04
+L006E:	lda     #$04
 	sta     _i
-L0070:	lda     _i
+L006F:	lda     _i
 	cmp     #$09
-	bcs     L0071
+	bcs     L0070
 ;
 ; oam_spr(100 + (i - 4) * 8, 90, gameOverText[i] + 96, 0);
 ;
@@ -1304,15 +1304,15 @@ L0070:	lda     _i
 ; for (i = 4; i < 9; ++i) {
 ;
 	inc     _i
-	jmp     L0070
+	jmp     L006F
 ;
 ; for (i = 0; i < 5; ++i) {
 ;
-L0071:	lda     #$00
+L0070:	lda     #$00
 	sta     _i
-L0072:	lda     _i
+L0071:	lda     _i
 	cmp     #$05
-	bcs     L0073
+	bcs     L0072
 ;
 ; oam_spr(100 + i * 8, 105, scoreConstText[i] + 96, 2);
 ;
@@ -1340,15 +1340,15 @@ L0072:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L0072
+	jmp     L0071
 ;
 ; for (i = 0; i < 5; ++i) {
 ;
-L0073:	lda     #$00
+L0072:	lda     #$00
 	sta     _i
-L0074:	lda     _i
+L0073:	lda     _i
 	cmp     #$05
-	bcs     L0075
+	bcs     L0074
 ;
 ; oam_spr(100 + i * 8, 115, scoreText[i] + 144, 2);
 ;
@@ -1376,13 +1376,13 @@ L0074:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L0074
+	jmp     L0073
 ;
 ; if (controller & PAD_START) {
 ;
-L0075:	lda     _controller
+L0074:	lda     _controller
 	and     #$10
-	beq     L0076
+	beq     L0075
 ;
 ; initializeNewGame();
 ;
@@ -1395,9 +1395,9 @@ L0075:	lda     _controller
 ;
 ; if (gameState == 1) {
 ;
-L0076:	lda     _gameState
+L0075:	lda     _gameState
 	cmp     #$01
-	jne     L0079
+	jne     L0078
 ;
 ; moveBasket();
 ;
@@ -1424,7 +1424,7 @@ L0076:	lda     _gameState
 ;
 	lda     _counter
 	cmp     _speed
-	jcc     L0079
+	jcc     L0078
 ;
 ; counter = 0;
 ;
@@ -1434,15 +1434,15 @@ L0076:	lda     _gameState
 ; for (i = 0; i < totalPoss; i++) {
 ;
 	sta     _i
-L0077:	lda     _i
+L0076:	lda     _i
 	cmp     #$0F
-	bcs     L0079
+	bcs     L0078
 ;
 ; if (visible[i] == 0) {
 ;
 	ldy     _i
 	lda     _visible,y
-	bne     L0078
+	bne     L0077
 ;
 ; visible[i] = 1;
 ;
@@ -1505,27 +1505,27 @@ L0036:	jsr     pushax
 ;
 ; break;
 ;
-	jmp     L007A
+	jmp     L0079
 ;
 ; for (i = 0; i < totalPoss; i++) {
 ;
-L0078:	inc     _i
-	jmp     L0077
+L0077:	inc     _i
+	jmp     L0076
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0079:	lda     #$00
-L007A:	sta     _i
-L007B:	lda     _i
+L0078:	lda     #$00
+L0079:	sta     _i
+L007A:	lda     _i
 	cmp     #$0F
-	jcs     L007E
+	jcs     L007D
 ;
 ; if (visible[i] == 1) {
 ;
 	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	jne     L007D
+	jne     L007C
 ;
 ; if (fruits[i].y > 190) {
 ;
@@ -1542,7 +1542,7 @@ L007B:	lda     _i
 	lda     (ptr1),y
 	cmp     #$BF
 	ldx     #$00
-	bcc     L007C
+	bcc     L007B
 ;
 ; visible[i] = 0;
 ;
@@ -1554,13 +1554,13 @@ L007B:	lda     _i
 ;
 	ldy     _i
 	lda     _fruitType,y
-	beq     L007D
+	beq     L007C
 	jsr     _updateHeart
 ;
 ; } else if (checkCollision(fruits[i], basket)) {
 ;
-	jmp     L007D
-L007C:	lda     _i
+	jmp     L007C
+L007B:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1579,7 +1579,7 @@ L007C:	lda     _i
 	lda     _basket
 	jsr     _checkCollision
 	tax
-	beq     L007D
+	beq     L007C
 ;
 ; if (fruitType[i] == 0) {
 ;
@@ -1615,13 +1615,13 @@ L0046:	ldy     _i
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L007D:	inc     _i
-	jmp     L007B
+L007C:	inc     _i
+	jmp     L007A
 ;
 ; if (heart_color[0] == 0) {
 ;
-L007E:	lda     _heart_color
-	bne     L007F
+L007D:	lda     _heart_color
+	bne     L007E
 ;
 ; gameState = 2;
 ;
@@ -1634,18 +1634,18 @@ L007E:	lda     _heart_color
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L007F:	lda     #$00
+L007E:	lda     #$00
 	sta     _i
-L0080:	lda     _i
+L007F:	lda     _i
 	cmp     #$0F
-	jcs     L0083
+	jcs     L0082
 ;
 ; if (visible[i] == 1) {
 ;
 	ldy     _i
 	lda     _visible,y
 	cmp     #$01
-	jne     L0082
+	jne     L0081
 ;
 ; if (fruitType[i] == 0) {
 ;
@@ -1685,7 +1685,7 @@ L0080:	lda     _i
 ;
 ; } else if (fruitType[i] == 1) {
 ;
-	jmp     L006A
+	jmp     L0069
 L0050:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$01
@@ -1723,7 +1723,7 @@ L0050:	ldy     _i
 ;
 ; } else if (fruitType[i] == 2) {
 ;
-	jmp     L006A
+	jmp     L0069
 L0053:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$02
@@ -1761,7 +1761,7 @@ L0053:	ldy     _i
 ;
 ; } else if (fruitType[i] == 3) {
 ;
-	jmp     L006A
+	jmp     L0069
 L0056:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$03
@@ -1799,7 +1799,7 @@ L0056:	ldy     _i
 ;
 ; } else if (fruitType[i] == 4) {
 ;
-	jmp     L006A
+	jmp     L0069
 L0059:	ldy     _i
 	lda     _fruitType,y
 	cmp     #$04
@@ -1837,12 +1837,12 @@ L0059:	ldy     _i
 ;
 ; } else if (fruitType[i] == 5) {
 ;
-	jmp     L006A
+	jmp     L0069
 L005C:	ldy     _i
 	ldx     #$00
 	lda     _fruitType,y
 	cmp     #$05
-	bne     L0081
+	bne     L0080
 ;
 ; oam_meta_spr(fruits[i].x, fruits[i].y, grapesMS);
 ;
@@ -1872,12 +1872,12 @@ L005C:	ldy     _i
 	sta     (sp),y
 	lda     #<(_grapesMS)
 	ldx     #>(_grapesMS)
-L006A:	jsr     _oam_meta_spr
+L0069:	jsr     _oam_meta_spr
 ;
 ; ++fruits[i].y;
 ;
 	ldx     #$00
-L0081:	lda     _i
+L0080:	lda     _i
 	jsr     aslax2
 	clc
 	adc     #<(_fruits)
@@ -1893,14 +1893,14 @@ L0081:	lda     _i
 ;
 ; for (i = 0; i < totalPoss; ++i) {
 ;
-L0082:	inc     _i
-	jmp     L0080
+L0081:	inc     _i
+	jmp     L007F
 ;
 ; for (i = 0; i < 5; ++i) {
 ;
-L0083:	lda     #$00
+L0082:	lda     #$00
 	sta     _i
-L0084:	lda     _i
+L0083:	lda     _i
 	cmp     #$05
 	bcs     L0062
 ;
@@ -1929,7 +1929,7 @@ L0084:	lda     _i
 ; for (i = 0; i < 5; ++i) {
 ;
 	inc     _i
-	jmp     L0084
+	jmp     L0083
 ;
 ; drawHearts();
 ;
@@ -1953,17 +1953,6 @@ L0062:	jsr     _drawHearts
 	jsr     mulax3
 	jsr     tossubax
 	sta     _speed
-;
-; basketSpeed = (score/30) + 2;
-;
-	lda     _score
-	ldx     _score+1
-	jsr     pushax
-	lda     #$1E
-	jsr     tosudiva0
-	clc
-	adc     #$02
-	sta     _basketSpeed
 ;
 ; while (1) {
 ;
