@@ -237,8 +237,10 @@ void main() {
         }
 
         drawHearts();
+
         if (speed > 10) {
             speed = 50 - 3*(score/10);
+            basketSpeed = (score/40) + 2;
         }
     }
 }
