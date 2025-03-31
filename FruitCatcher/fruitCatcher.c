@@ -36,11 +36,11 @@ unsigned int score = 0;
 unsigned char speed = 50;
 unsigned char counter = 0;
 unsigned char i;
-unsigned char c = 2;
+unsigned char basketSpeed = 2;
 unsigned char gameState = 0;  // 0 - Not Started 1 = Game Running 2 = Game Over
 unsigned char playText[5] = {'P', 'L', 'A', 'Y', '!'};
-unsigned char gameOverText[10] = {'G', 'A', 'M', 'E', ' ',
-                                  'O', 'V', 'E', 'R', '!'};
+unsigned char gameOverText[9] = {'G', 'A', 'M', 'E','O', 'V', 'E', 'R', '!'};
+unsigned char scoreConstText[5] = {'S', 'C', 'O', 'R', 'E'};
 // Fruit Type:
 // 0 = Bomb
 // 1 = Banana
@@ -49,16 +49,16 @@ unsigned char gameOverText[10] = {'G', 'A', 'M', 'E', ' ',
 // 4 = Watermelon
 // 5 = Grapes
 
-void moveBasket(c) {
-    if ((controller & PAD_LEFT) && (basket.x > 32)) {
-        basket.x -= c;
-    } else if ((controller & PAD_RIGHT) && (basket.x < 255)) {
-        basket.x += c;
+void moveBasket() {
+    if (controller & PAD_LEFT) {
+        basket.x -= basketSpeed;
+    } else if (controller & PAD_RIGHT){
+        basket.x += basketSpeed;
     }
 }
 
 unsigned char checkCollision(sprites fruit, sprites basket) {
-    if ((fruit.x > basket.x - 32 && fruit.x - 16 < basket.x) &&
+    if ((fruit.x > basket.x - 28 && fruit.x - 16 < basket.x - 4) &&
         (fruit.y > basket.y - 24 && fruit.y - 16 < basket.y)) {
         return 1;
     }
@@ -99,8 +99,8 @@ void updateHeart() {
 
 void initializeNewGame() {
     score = 0;
-    speed = 100;
-
+    speed = 50;
+    basketSpeed = 2;
     for (i = 0; i < 5; ++i) {
         scoreText[i] = 0;
     }
@@ -138,9 +138,9 @@ void main() {
         if (gameState == 0) {
             oam_clear();
             for (i = 0; i < 5; ++i) {
-                oam_spr(120 + i * 8, 112, playText[i] + 96, 3);
+                oam_spr(120 + i * 8, 104, playText[i] + 96, 3);
             }
-            if (controller & PAD_SELECT) {
+            if (controller & PAD_START) {
                 gameState = 1;
             }
         }
@@ -149,19 +149,28 @@ void main() {
         if (gameState == 2) {
             oam_clear();
             for (i = 0; i < 4; ++i) {
-                oam_spr(100 + i * 8, 100, gameOverText[i] + 96, 0);
+                oam_spr(100 + i * 8, 80, gameOverText[i] + 96, 0);
             }
-            for (i = 4; i < 10; ++i) {
-                oam_spr(100 + (i - 4) * 8, 110, gameOverText[i] + 96, 0);
+            for (i = 4; i < 9; ++i) {
+                oam_spr(100 + (i - 4) * 8, 90, gameOverText[i] + 96, 0);
             }
-            if (controller & PAD_SELECT) {
+
+            for (i = 0; i < 5; ++i) {
+                oam_spr(100 + i * 8, 105, scoreConstText[i] + 96, 2);
+            }
+
+            for (i = 0; i < 5; ++i) {
+                oam_spr(100 + i * 8, 115, scoreText[i] + 144, 2);
+            }
+
+            if (controller & PAD_START) {
                 initializeNewGame();
                 gameState = 1;
             }
         }
 
         if (gameState == 1) {
-            moveBasket(c);
+            moveBasket();
             oam_meta_spr(basket.x, basket.y, basketMS);
             ++counter;
             // Create a new Fruit/Bomb
@@ -170,8 +179,8 @@ void main() {
                 for (i = 0; i < totalPoss; i++) {
                     if (visible[i] == 0) {
                         visible[i] = 1;
-                        fruitType[i] = rand8() % 7;
-                        fruits[i].x = rand8() % 235 + 20;
+                        fruitType[i] = rand8() % 6;
+                        fruits[i].x = rand8() % 220 + 30;
                         fruits[i].y = 0;
                         break;
                     }
@@ -184,8 +193,7 @@ void main() {
             if (visible[i] == 1) {
                 if (fruits[i].y > 190) {
                     visible[i] = 0;
-                    if (fruitType[i] != 0)
-                        updateHeart();  // Change color of a heart
+                    if (fruitType[i] != 0) updateHeart();  // Change color of a heart
                 } else if (checkCollision(fruits[i], basket)) {
                     if (fruitType[i] == 0) {
                         updateHeart();
@@ -225,14 +233,12 @@ void main() {
 
         // Draw the score
         for (i = 0; i < 5; ++i) {
-            oam_spr(220 + i * 7, 20, scoreText[i] + 144, 2);
+            oam_spr(210 + i * 7, 20, scoreText[i] + 144, 2);
         }
 
         drawHearts();
-
-        if (score % 10 == 0 && score != 0) {
-            speed--;
+        if (speed > 10) {
+            speed = 50 - 3*(score/10);
         }
-
     }
 }
