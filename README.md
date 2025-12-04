@@ -4,6 +4,8 @@
 
 This repository contains an NES emulator written in C++. The emulator is capable of running multiple NES games, provided as `.nes` ROM files. Users can switch between games by modifying the `.nes` file name in `main.cpp` before compiling.
 
+![Alt text](project_image_nes.jpg)
+
 ## How to Run the Project
 
 ### Prerequisites
